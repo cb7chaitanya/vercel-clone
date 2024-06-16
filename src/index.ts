@@ -3,6 +3,7 @@ import cors from "cors"
 import simpleGit from "simple-git"
 import { generateId, getAllFiles } from "./utils"
 import path from "path"
+import { uploadSingleFile } from "./s3"
 
 const app = express()
 app.use(cors())
@@ -11,15 +12,18 @@ app.use(express.json())
 
 app.get("/", (req, res) => {
     res.send("Hello World!")
+    console.log(path.join(__dirname, "../out"))
 })
+
 app.post("/upload", async (req,res) => {
     try{
         const url = req.body.url
         const id = generateId()
-        await simpleGit().clone(url,`out/${id}`)
-
-        const files = getAllFiles(path.join(__dirname,`out/${id}`))
-
+        await simpleGit().clone(url, path.join(__dirname, `../out/${id}`))
+        const files = getAllFiles(path.join(__dirname, `../out/${id}`));
+        files.forEach(async file => {
+            await uploadSingleFile({name: file.slice(__dirname.length + 1), path: file});
+        })
         return res.json({
             msg: "Repo URL Recieved",
             url: url,
