@@ -4,6 +4,9 @@ import simpleGit from "simple-git"
 import { generateId, getAllFiles } from "./utils"
 import path from "path"
 import { uploadSingleFile } from "./s3"
+import { createClient } from "redis"
+const redisQueue = createClient()
+redisQueue.connect()
 
 const app = express()
 app.use(cors())
@@ -24,6 +27,9 @@ app.post("/upload", async (req,res) => {
         files.forEach(async file => {
             await uploadSingleFile({name: file.slice(__dirname.length + 1), path: file});
         })
+
+        redisQueue.lPush("file-queue", id)
+
         return res.json({
             msg: "Repo URL Recieved",
             url: url,
