@@ -25,11 +25,10 @@ app.post("/upload", async (req,res) => {
         await simpleGit().clone(url, path.join(__dirname, `../out/${id}`))
         const files = getAllFiles(path.join(__dirname, `../out/${id}`));
         files.forEach(async file => {
-            await uploadSingleFile({name: file.slice(__dirname.length + 1), path: file});
+            console.log(file)
+            await uploadSingleFile(file.slice(__dirname.length + 1), file);
         })
-
         redisQueue.lPush("file-queue", id)
-
         return res.json({
             msg: "Repo URL Recieved",
             url: url,
